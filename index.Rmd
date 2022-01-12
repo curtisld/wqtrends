@@ -1,0 +1,507 @@
+---
+title: "GAM evaluation - King County Large Lakes"
+output: 
+  html_document:
+    css: kable.css
+    includes: 
+      # in_header: ["cssloaders_in_header.html", "google-analytics.html"]
+      in_header: ["cssloaders_in_header.html"]
+self_contained: yes
+runtime: shiny
+---
+
+
+```{r, message = F, warning = F, results = 'hide', echo = F}
+# globals
+library(knitr)
+opts_chunk$set(warning = FALSE, message = FALSE, dev.args = list(bg = 'transparent'), eval = T, echo = F)
+
+library(tidyverse)
+library(lubridate)
+library(shiny)
+library(wqtrends)
+# devtools::load_all('../wqtrends')
+library(ggmap)
+library(mgcv)
+library(plotly)
+library(gridExtra)
+library(shinycssloaders)
+source('R/funcs.R')
+
+data(datprc)
+data(locs)
+data(map)
+
+# CLD
+#yrs <- seq(1990, 2019)
+yrs <- seq(1993, 2021)
+# params <- list(
+#   'Chlorophyll-a (ug/L)' = 'chl', 
+#   'GPP (mg C m-2 d-1)' = 'gpp', 
+#   'DO (mg/L)' = 'do', 
+#   'DO sat. (%)' = 'dosat'
+# )
+params <- list(
+  'Fecal Coliform (cfu/L)' = 'fc',
+  'Temperature (⁰C)' = 'temp', 
+  'Dissolved Oxygen (mg/L)' = 'do', 
+  'Conductivity (uS/cm)' = 'cond',
+  'pH' = 'ph',
+  'Total Phosphorus (mg/L)' = 'tp',
+  'Soluble Reactive Phosphorus (mg/L)' = 'srp',
+  'Nitrate Nitrogen (mg/L)' = 'no3',
+  'Secchi Transparency (m)' = 'secchi',
+  'Chlorophyll a (ug/L)' = 'chl',
+  'Total Alkalinity (mg/L)' = 'alk',
+  'Total Nitrogen (mg/L)' = 'tn'
+  
+)
+
+# ext <- make_bbox(locs$lon, locs$lat, f = 0.2)
+# map <- get_stamenmap(ext,  zoom = 11, maptype = "toner-lite", where = getwd())
+pbase <- ggmap(map) +
+  theme_bw() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()
+  )
+```
+
+```{r reactives}
+# selected station location and raw time series
+mapselplo <- reactive({
+
+  # inputs
+  station <- input$station
+  parameter <- input$parameter
+  typ <- input$typ
+  ylb <- ylb()
+
+  req(ylb)
+  
+  locpt <- locs %>% 
+    # filter(Station %in% !!station)
+    #CLD
+    filter(Station %in% !!substr(station,1,4))
+
+  # map
+  p1 <- pbase + 
+    geom_point(data = locpt, aes(x = lon, y = lat), colour = 'tomato1', size = 8) +
+    geom_text(data = locs, aes(x = lon, y = lat, label = Station))
+
+  # time series raw
+  toplo <- datprc %>% 
+    filter(station %in% !!station) %>% 
+    filter(param %in% !!parameter)
+  
+  if(typ == 'tot')
+     p2 <- ggplot(toplo, aes(x = cont_year, y = value)) + 
+        geom_line() 
+  if(typ == 'yrs')
+     p2 <- ggplot(toplo, aes(x = factor(yr), y = value)) +
+            geom_boxplot() 
+  if(typ == 'mos')
+     p2 <- ggplot(toplo, aes(x = mo, y = value)) + 
+        geom_boxplot()
+      
+  # create plots for whole time series, by year, by month
+  p2 <- p2 +
+    theme_bw() +
+    theme(axis.title.x = element_blank())
+
+  if(typ == 'yrs')
+     p2 <- p2 +
+    theme(axis.text.x = element_text(angle = 45,hjust=1)) 
+  
+  # CLD
+  # if(parameter %in% c('chl', 'gpp'))
+  if(parameter %in% c('chl', 'gpp', 'fc'))
+    p2 <- p2 + 
+      scale_y_log10(ylb)
+  if(parameter %in% c('do', 'dosat'))
+    p2 <- p2 + 
+      scale_y_continuous(ylb)
+  
+  out <- grid.arrange(p1, p2, widths = c(0.3, 0.7), ncol = 2)
+  
+  return(out)
+  
+})  
+  
+# models for selected station
+mod <- reactive({
+  
+  # inputs
+  parameter <- input$parameter
+  station <- input$station
+  
+  fl <- paste0('mods_', parameter, station)
+  load(file = paste0('data/', fl, '.RData'))
+ 
+  out <- get(fl) %>% 
+    ungroup() %>%
+    pull(modi) %>% 
+    deframe()
+
+  return(out)
+  
+})
+  
+# y axis label
+ylb <- reactive({
+  
+  # input
+  parameter <- input$parameter
+
+  out <- params %in% parameter %>% which %>% params[.] %>% names
+  
+  return(out)
+
+})
+
+# text labels for parameter selection
+txtlb <- reactive({
+  
+  # input
+  parameter <- input$parameter
+  
+  out <- params %in% parameter %>% which %>% params[.] %>% names
+  out <- gsub('^(.*)\\s\\(.*$', '\\1', out)
+  out <- case_when(
+    out %in% 'Chlorophyll-a' ~ tolower(out), 
+    T ~ out
+  )
+  
+  return(out)
+  
+})
+
+# smoother stats of GAMs for selected station
+modtabsmth <- reactive({
+  
+  # inputs
+  mod <- mod()
+  
+  out <- anlz_smooth(mod)
+  
+  return(out)
+  
+})
+
+# summary stats of GAMs, model fit/perf
+modtabfit <- reactive({
+  
+  # input 
+  mod <- mod()
+  
+  out <- anlz_fit(mod)
+  
+  return(out)
+  
+})
+
+# doy plot
+prddoy <- reactive({
+  
+  # inputs
+  mod <- mod()
+  ylb <- ylb()
+  
+  out <- show_prddoy(mod, ylab = ylb)
+  
+  return(out)
+  
+})
+
+# series plot
+prdseries <- reactive({
+  
+  # inputs
+  mod <- mod()
+  ylb <- ylb()
+  
+  out <- show_prdseries(mod, ylab = ylb)
+  
+  return(out)
+  
+})
+
+# seasonal predictions
+prdseason <- reactive({
+  
+  # inputs
+  mod <- mod()
+  ylb <- ylb()
+  
+  out <- show_prdseason(mod, ylab = ylb)
+
+  return(out)
+  
+})
+
+# 3d plot
+prd3d <- reactive({
+  
+  # inputs
+  mod <- mod()
+  ylb <- ylb()
+  
+  out <- show_prd3d(mod, ylab = ylb)
+  
+  return(out)
+  
+})
+
+# gam check plot for selected GAM for selected station
+gamchk <- reactive({
+  
+  # inputs
+  mod <- mod()
+  
+  out <- mod %>% 
+    gam.check()
+  
+  return(out)
+  
+})
+
+# percent change
+perchg <- reactive({
+  
+  # inputs
+  yrbs <- as.numeric(input$yrbs)
+  yrts <- as.numeric(input$yrts)
+  mod <- mod()
+  ylb <- ylb()
+  
+  req(yrbs)
+  req(yrts)
+  
+  out <- show_perchg(mod, baseyr = yrbs, testyr = yrts, ylab = ylb)
+  
+  return(out)
+  
+})
+
+# seasonal averages
+metseason <- reactive({
+  
+  # inputs
+  dytr <- input$dytr
+  yrtr <- input$yrtr
+  metsel <- input$metsel
+  mod <- mod()
+  ylb <- ylb()
+  
+  req(yrtr)
+  
+  # add explicit quotes for parse
+  ylb <- paste0('\"', ylb, '\"')
+
+  out <- try({
+    
+    toprs <- paste0('show_metseason(mod, metfun = ', metsel, ', doystr = ', dytr[1], ', doyend = ', dytr[2], ', yrstr = , ', 
+                    yrtr[1], ', yrend = ', yrtr[2], ', ylab = ', ylb, ', nsim = 1e3, na.rm = TRUE)')
+    
+    eval(parse(text = toprs))
+    
+    })
+  
+  validate(
+    need(inherits(out, 'ggplot'), 'Pick different year range')
+  )
+  
+  return(out)
+  
+})
+
+# seasonal trends
+trndseason <- reactive({
+  
+  # inputs
+  dytr <- input$dytr
+  yrtr <- input$yrtr
+  mod <- mod()
+  metsel <- input$metsel
+  wntr <- input$wntr
+  wnty <- input$wnty
+  
+  req(yrtr)
+  
+  # add 
+  out <- paste0('show_trndseason(mod, ', metsel, ', doystr = ', dytr[1], ', doyend = ', dytr[2], ', win = ', wntr, 
+    ', justify = \"', wnty, '\", ylab = \"Change per year\", nsim = 1e3, na.rm = TRUE)')
+ 
+  out <- eval(parse(text = out))
+  
+  return(out)
+  
+})
+
+```
+
+This application uses data from long-term water quality monitoring of large lakes of the Seattle metropolitan area (lakes Union, Washington, and Sammamish) ([King County 20202](https://doi.org/10.5066/F7TQ5ZPR){target="_blank"}; [Schraga and Cloern 2017](https://green2.kingcounty.gov/ScienceLibrary/Document.aspx?ArticleID=624){target="_blank"}.  Details on the GAM-mixmeta approach are presented in [Beck et al (2022)](https://doi.org/10.1016/j.scitotenv.2021.149927){target="_blank"}.
+
+## Exploratory plots
+
+The following plots show the raw data for the three central lake monitoring stations and parameters, 1993 - 2019.  Select the station, parameter, and plot type (total time series, by year, or by month).  The year and month plots are aggregated boxplots of all observations at a station for each selected time period.
+
+```{r, echo = F}
+# selection widgets
+column(4, selectInput("station", "Choose station:", sort(unique(datprc$station))))
+column(4, selectInput("parameter", "Choose parameter:", choices = params))
+##CLD 
+# tst <- keep(params, ~ any(pms %in% .x))
+# column(4, selectInput("parameter", "Choose parameter:", choices = tst))
+column(4, selectInput("typ", "Choose plot type:", c('tot', 'yrs', 'mos')))
+
+## CLD
+observe({
+  pms <- unique(datprc$param[datprc$station %in% input$station])  
+  newparameter <- purrr::keep(params, ~ any(pms %in% .x))
+
+  updateSelectInput(session, "parameter",
+                  choices = newparameter)
+
+})
+
+
+```
+
+```{r}
+# make the plot
+output$mapselplo <- renderPlot(mapselplo(), height = 300, width = 900)
+plotOutput('mapselplo') %>% withSpinner()
+```
+
+## GAM results {.tabset}
+
+Generalized additive models (GAMs) were developed to describe trends at each of the monitoring stations.  The station and parameter can be chosen from the drop down menus above.  Each model has the following structure:
+
+* `S`: `r renderText(input$parameter)` ~  s(cont_year, k = *large*)
+
+The `cont_year` variable is measured as a continuous numeric value for the time series vector (e.g., January 1st, 2000 is 2000.0, July 1st, 2000 is 2000.5, etc.). The function `s()` models `year` as a smoothed, non-linear variable.  The `k` value is a theoretical upper limit on the number of knots used to fit the smoother for `cont_year`.  The optimal number of knots are determined automatically using generalized cross-validation as implemented with the `mgcv()` function.  Using a sufficiently large number for `k` ensures the model is not underfit to the data. The upper limit of `k` was chosen as 12 times the number of years of data at each station (~360).
+
+__Selected station:  `r renderText({input$station})`, Selected parameter: `r renderText(txtlb())`__
+
+### Predictions
+
+The four plots show the predicted trends from the model.  The first plot shows estimated `r renderText(txtlb())` by day of year with separate lines for each year.  The second plot show predictions across the entire time series. The third plot show the predicted trends with separate lines for each month across the time series. The final plot shows the results as a three-dimensional fit of the estimated trends across year and day of year with the z-axis showing estimated `r renderText(txtlb())`.  
+
+```{r}
+output$prddoy <- renderPlot(prddoy())
+plotOutput('prddoy', height = "400px", width = "900px") %>% withSpinner()
+```
+
+```{r}
+output$prdseries <- renderPlot(prdseries())
+plotOutput('prdseries', height = "330px") %>% withSpinner()
+```
+
+```{r}
+output$prdseason <- renderPlot(prdseason())
+plotOutput('prdseason', height = "400px") %>% withSpinner()
+```
+
+```{r}
+output$prd3d <- renderPlotly(prd3d())
+plotlyOutput('prd3d') %>% withSpinner()
+```
+
+### Fit
+
+The first table shows the estimates for the continuous year smoother as the estimated degrees of freedom (edf), the reference degrees of freedom (Ref.df), the test statistic (F), and significance of the component (p-value). The significance is in part based on the difference between edf and Ref.df. The second table shows the overall model summary as Akaike Information Criterion (AIC), the generalized cross-validation score (GCV), and the R2 values. In general, lower values for AIC and GCV and higher values for R2 indicate improved model fit. The plots are results from the `gam.check()` function that provides a standard assessment of GAM fit.
+
+```{r}
+output$modtabsmth <- renderTable(modtabsmth())
+output$modtabfit <- renderTable(modtabfit())
+tableOutput('modtabsmth')
+tableOutput('modtabfit')
+```
+
+```{r}
+output$gamchk <- renderPlot(gamchk(), height = 550)
+plotOutput('gamchk', height="550px") %>% withSpinner()
+```
+
+### Trends 
+
+This tab shows the predicted trends across the time series (and options for trend assessment) and the predicted trends as seasonal aggregations with 95% confidence intervals within each year.
+
+```{r}
+
+column(4,
+       renderUI({
+
+         req(mod())
+         yrs <- mod()$model %>% pull(cont_year) %>% date_decimal(.) %>% year %>% unique
+         selectInput('yrbs', 'Select base years:', choices = yrs, selected = yrs[1], multiple = T)
+         
+         })
+)
+column(4,
+       renderUI({
+         
+         req(mod())
+         yrs <- mod()$model %>% pull(cont_year) %>% date_decimal(.) %>% year %>% unique
+         selectInput('yrts', 'Select test years:', choices = yrs, selected = rev(yrs)[1], multiple = T)
+         
+         })
+)
+```
+
+```{r}
+output$perchg <- renderPlot(perchg(), height = 320)
+plotOutput('perchg') %>% withSpinner()
+```
+
+```{r}
+column(12,
+  column(6,
+    ##CLD sliderInput('dytr', 'Select day-of-year range to define seasons:', min = 1, max = 365, value = c(213, 304))
+    sliderInput('dytr', 'Select day-of-year range to define seasons:', min = 1, max = 365, value = c(152, 273))
+  ),
+  column(6,
+    renderUI({
+      
+      req(mod())
+      yrs <- mod()$model %>% pull(cont_year) %>% date_decimal(.) %>% year %>% unique
+      # sliderInput('yrtr', 'Select years for across-year trend estimate:', min = min(yrs), max = max(yrs), value = c(2015, 2019), sep = "", step = 1)
+      # CLD
+      sliderInput('yrtr', 'Select years for across-year trend estimate:', min = min(yrs), 2025, value = c(2015, 2021), sep = "", step = 1)
+      
+    })
+  )
+)
+column(12, 
+  column(6, 
+    selectInput('metsel', 'Select summary metric:', choices = c('mean', 'min', 'max', 'var'), selected = 'mean')       
+  )
+)
+```
+
+```{r}
+output$metseason <- renderPlot(metseason(), height = 320)
+plotOutput('metseason') %>% withSpinner()
+```
+
+<br></br>
+<br></br>
+<br></br>
+
+```{r}
+column(12, 
+  column(6, 
+    sliderInput('wntr', 'Select window size:', min = 2, max = 20, value = 5)       
+  ), 
+  column(6, 
+    selectInput('wnty', 'Select window type:', choices = c('center', 'left', 'right'))     
+  )
+)
+```
+
+```{r}
+output$trndseason <- renderPlot(trndseason(), height = 370)
+plotOutput('trndseason') %>% withSpinner()
+```
+
