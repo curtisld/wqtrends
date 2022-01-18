@@ -182,18 +182,67 @@ resource_files:
 - data/mods_tp0852_whole.RData
 - data/mods_tpA522_hyp.RData
 - data/mods_tpA522_whole.RData
+- data/mods_dosat0512_surface.RData
+- data/mods_dosat0540_surface.RData
+- data/mods_dosat0611_epi.RData
+- data/mods_dosat0611_hyp.RData
+- data/mods_dosat0612_epi.RData
+- data/mods_dosat0612_hyp.RData
+- data/mods_dosat0612_whole.RData
+- data/mods_dosat0804_surface.RData
+- data/mods_dosat0826_epi.RData
+- data/mods_dosat0826_hyp.RData
+- data/mods_dosat0831_epi.RData
+- data/mods_do0831_hyp.RData
+- data/mods_dosat0831_hyp.RData
+- data/mods_dosat0852_epi.RData
+- data/mods_dosat0852_hyp.RData
+- data/mods_do0852_whole.RData
+- data/mods_dosatA522_epi.RData
+- data/mods_dosatA522_hyp.RData
+- data/mods_dosatA522_whole.RData
+- data/mods_TSI_chla0611.RData
+- data/mods_TSI_chla0612.RData
+- data/mods_TSI_chla0804.RData
+- data/mods_TSI_chla0826.RData
+- data/mods_TSI_chla0831.RData
+- data/mods_TSI_chla0852.RData
+- data/mods_TSI_chlaA522.RData
+- data/mods_TSI_secchi0611.RData
+- data/mods_TSI_secchi0612.RData
+- data/mods_TSI_secchi0804.RData
+- data/mods_TSI_secchi0826.RData
+- data/mods_TSI_secchi0831.RData
+- data/mods_TSI_secchi0852.RData
+- data/mods_TSI_secchiA522.RData
+- data/mods_TSI_TP0611.RData
+- data/mods_TSI_TP0612.RData
+- data/mods_TSI_TP0804.RData
+- data/mods_TSI_TP0826.RData
+- data/mods_TSI_TP0831.RData
+- data/mods_TSI_TP0852.RData
+- data/mods_TSI_TPA522.RData
+- data/mods_TSI_TN0611.RData
+- data/mods_TSI_TN0612.RData
+- data/mods_TSI_TN0804.RData
+- data/mods_TSI_TN0826.RData
+- data/mods_TSI_TN0831.RData
+- data/mods_TSI_TN0852.RData
+- data/mods_TSI_TNA522.RData
 ---
 
 
 ```{r, message = F, warning = F, results = 'hide', echo = F}
 # globals
+options(repos = c(tbeptech = 'https://tbep-tech.r-universe.dev',CRAN = 'https://cloud.r-project.org',USGS = 'https://owi.usgs.gov/R'))
+
 library(knitr)
 opts_chunk$set(warning = FALSE, message = FALSE, dev.args = list(bg = 'transparent'), eval = T, echo = F)
 
 library(tidyverse)
 library(lubridate)
 library(shiny)
-if (!require(wqtrends)) install.packages('wqtrends',repos='https://tbep-tech.r-universe.dev')
+# if (!require(wqtrends)) install.packages('wqtrends',repos='https://tbep-tech.r-universe.dev')
 library(wqtrends)
 # devtools::load_all('../wqtrends')
 library(ggmap)
@@ -218,6 +267,7 @@ yrs <- seq(1993, 2021)
 # )
 params <- list(
   'Fecal Coliform (cfu/L)' = 'fc',
+    'DO Saturation (%)' = 'dosat',
   'Temperature (⁰C)' = 'temp', 
   'Dissolved Oxygen (mg/L)' = 'do', 
   'Conductivity (uS/cm)' = 'cond',
@@ -228,7 +278,11 @@ params <- list(
   'Secchi Transparency (m)' = 'secchi',
   'Chlorophyll a (ug/L)' = 'chl',
   'Total Alkalinity (mg/L)' = 'alk',
-  'Total Nitrogen (mg/L)' = 'tn'
+  'Total Nitrogen (mg/L)' = 'tn',
+  'Trophic State Index (Chl a)' = 'TSI_chla',
+  'Trophic State Index (Secchi)' = 'TSI_secchi',
+  'Trophic State Index (TP)' = 'TSI_TP',
+  'Trophic State Index (TN)' = 'TSI_TN'
   
 )
 
@@ -519,7 +573,7 @@ This application uses data from long-term water quality monitoring of large lake
 
 ## Exploratory plots
 
-The following plots show the raw data for the three central lake monitoring stations and parameters, 1993 - 2019.  Select the station, parameter, and plot type (total time series, by year, or by month).  The year and month plots are aggregated boxplots of all observations at a station for each selected time period.
+The following plots show the raw data for the three central lake monitoring stations and parameters, 1993 - 2021.  Select the station, parameter, and plot type (total time series, by year, or by month).  The year and month plots are aggregated box plots of all observations at a station for each selected time period.
 
 ```{r, echo = F}
 # selection widgets
