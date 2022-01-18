@@ -1,5 +1,5 @@
 ---
-title: "GAM evaluation - King County Large Lakes"
+title: "GAM lake water quality trend evaluation - King County Large Lakes"
 output:
   html_document:
     css: kable.css
