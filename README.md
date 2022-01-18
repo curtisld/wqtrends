@@ -1,2 +1,2 @@
 # wqtrends
-This application uses data from long-term water quality monitoring of large lakes of the Seattle metropolitan area (lakes Union, Washington, and Sammamish) ([King County 2020](https://green2.kingcounty.gov/ScienceLibrary/Document.aspx?ArticleID=624).  Details on the GAM-mixmeta approach are presented in [Beck et al (2022)](https://doi.org/10.1016/j.scitotenv.2021.149927).
+This application uses data from long-term water quality monitoring of large lakes of the Seattle metropolitan area (lakes Union, Washington, and Sammamish) ([King County 2020])(https://green2.kingcounty.gov/ScienceLibrary/Document.aspx?ArticleID=624).  Details on the GAM-mixmeta approach are presented in [Beck et al (2022)](https://doi.org/10.1016/j.scitotenv.2021.149927).
