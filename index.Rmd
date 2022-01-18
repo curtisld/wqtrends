@@ -1,13 +1,187 @@
 ---
 title: "GAM evaluation - King County Large Lakes"
-output: 
+output:
   html_document:
     css: kable.css
-    includes: 
-      # in_header: ["cssloaders_in_header.html", "google-analytics.html"]
-      in_header: ["cssloaders_in_header.html"]
+    includes:
+      in_header: cssloaders_in_header.html
 self_contained: yes
 runtime: shiny
+resource_files:
+- data/datprc.RData
+- data/locs.RData
+- data/map.RData
+- data/mods_chl0512.RData
+- data/mods_fc0512.RData
+- data/mods_secchi0512.RData
+- data/mods_alk0612_epi.RData
+- data/mods_alk0612_hyp.RData
+- data/mods_alk0612_whole.RData
+- data/mods_alk0852_epi.RData
+- data/mods_alk0852_hyp.RData
+- data/mods_alk0852_whole.RData
+- data/mods_alkA522_epi.RData
+- data/mods_alkA522_hyp.RData
+- data/mods_alkA522_whole.RData
+- data/mods_chl0540.RData
+- data/mods_chl0611.RData
+- data/mods_chl0612.RData
+- data/mods_chl0804.RData
+- data/mods_chl0826.RData
+- data/mods_chl0831.RData
+- data/mods_chl0852.RData
+- data/mods_chlA522.RData
+- data/mods_cond0512_surface.RData
+- data/mods_cond0540_surface.RData
+- data/mods_cond0611_epi.RData
+- data/mods_cond0611_hyp.RData
+- data/mods_cond0612_epi.RData
+- data/mods_cond0612_hyp.RData
+- data/mods_cond0612_whole.RData
+- data/mods_cond0804_surface.RData
+- data/mods_cond0826_epi.RData
+- data/mods_cond0826_hyp.RData
+- data/mods_cond0831_epi.RData
+- data/mods_cond0831_hyp.RData
+- data/mods_cond0852_epi.RData
+- data/mods_cond0852_hyp.RData
+- data/mods_cond0852_whole.RData
+- data/mods_condA522_epi.RData
+- data/mods_condA522_hyp.RData
+- data/mods_condA522_whole.RData
+- data/mods_do0512_surface.RData
+- data/mods_do0540_surface.RData
+- data/mods_do0611_epi.RData
+- data/mods_do0611_hyp.RData
+- data/mods_do0612_epi.RData
+- data/mods_do0612_hyp.RData
+- data/mods_do0612_whole.RData
+- data/mods_do0804_surface.RData
+- data/mods_do0826_epi.RData
+- data/mods_do0826_hyp.RData
+- data/mods_do0831_epi.RData
+- data/mods_do0831_hyp.RData
+- data/mods_do0852_epi.RData
+- data/mods_do0852_hyp.RData
+- data/mods_do0852_whole.RData
+- data/mods_doA522_epi.RData
+- data/mods_doA522_hyp.RData
+- data/mods_doA522_whole.RData
+- data/mods_fc0540.RData
+- data/mods_fcA522.RData
+- data/mods_no3A522_epi.RData
+- data/mods_no3A522_hyp.RData
+- data/mods_no3A522_whole.RData
+- data/mods_no30512_surface.RData
+- data/mods_no30540_surface.RData
+- data/mods_no30611_epi.RData
+- data/mods_no30611_hyp.RData
+- data/mods_no30612_epi.RData
+- data/mods_no30612_hyp.RData
+- data/mods_no30612_whole.RData
+- data/mods_no30804_surface.RData
+- data/mods_no30826_epi.RData
+- data/mods_no30826_hyp.RData
+- data/mods_no30831_epi.RData
+- data/mods_no30831_hyp.RData
+- data/mods_no30852_epi.RData
+- data/mods_no30852_hyp.RData
+- data/mods_no30852_whole.RData
+- data/mods_ph0512_surface.RData
+- data/mods_ph0540_surface.RData
+- data/mods_ph0611_epi.RData
+- data/mods_ph0611_hyp.RData
+- data/mods_ph0612_epi.RData
+- data/mods_ph0612_hyp.RData
+- data/mods_ph0612_whole.RData
+- data/mods_ph0804_surface.RData
+- data/mods_ph0826_epi.RData
+- data/mods_ph0826_hyp.RData
+- data/mods_ph0831_epi.RData
+- data/mods_ph0831_hyp.RData
+- data/mods_ph0852_epi.RData
+- data/mods_ph0852_hyp.RData
+- data/mods_ph0852_whole.RData
+- data/mods_secchi0540.RData
+- data/mods_secchi0611.RData
+- data/mods_secchi0612.RData
+- data/mods_secchi0804.RData
+- data/mods_secchi0826.RData
+- data/mods_secchi0831.RData
+- data/mods_secchi0852.RData
+- data/mods_secchiA522.RData
+- data/mods_srp0512_surface.RData
+- data/mods_srp0540_surface.RData
+- data/mods_srp0611_epi.RData
+- data/mods_srp0611_hyp.RData
+- data/mods_srp0612_epi.RData
+- data/mods_srp0612_hyp.RData
+- data/mods_srp0612_whole.RData
+- data/mods_srp0804_surface.RData
+- data/mods_srp0826_epi.RData
+- data/mods_srp0826_hyp.RData
+- data/mods_srp0831_epi.RData
+- data/mods_srp0831_hyp.RData
+- data/mods_srp0852_epi.RData
+- data/mods_srp0852_hyp.RData
+- data/mods_srp0852_whole.RData
+- data/mods_srpA522_epi.RData
+- data/mods_srpA522_hyp.RData
+- data/mods_srpA522_whole.RData
+- data/mods_temp0512_surface.RData
+- data/mods_temp0540_surface.RData
+- data/mods_temp0611_epi.RData
+- data/mods_temp0611_hyp.RData
+- data/mods_temp0612_epi.RData
+- data/mods_temp0612_hyp.RData
+- data/mods_temp0612_whole.RData
+- data/mods_temp0804_surface.RData
+- data/mods_temp0826_epi.RData
+- data/mods_temp0826_hyp.RData
+- data/mods_temp0831_epi.RData
+- data/mods_temp0831_hyp.RData
+- data/mods_temp0852_epi.RData
+- data/mods_temp0852_hyp.RData
+- data/mods_temp0852_whole.RData
+- data/mods_tempA522_epi.RData
+- data/mods_tempA522_hyp.RData
+- data/mods_tempA522_whole.RData
+- data/mods_tn0804_surface.RData
+- data/mods_tn0826_epi.RData
+- data/mods_tn0826_hyp.RData
+- data/mods_tn0512_surface.RData
+- data/mods_tn0540_surface.RData
+- data/mods_tn0611_epi.RData
+- data/mods_tn0611_hyp.RData
+- data/mods_tn0612_epi.RData
+- data/mods_tn0612_hyp.RData
+- data/mods_tn0612_whole.RData
+- data/mods_tn0831_epi.RData
+- data/mods_tn0831_hyp.RData
+- data/mods_tn0852_epi.RData
+- data/mods_tn0852_hyp.RData
+- data/mods_tn0852_whole.RData
+- data/mods_tpA522_epi.RData
+- data/mods_tnA522_hyp.RData
+- data/mods_tnA522_whole.RData
+- data/mods_tnA522_epi.RData
+- data/mods_tp0512_surface.RData
+- data/mods_tp0540_surface.RData
+- data/mods_tp0611_epi.RData
+- data/mods_tp0611_hyp.RData
+- data/mods_tp0612_epi.RData
+- data/mods_tp0612_hyp.RData
+- data/mods_tp0612_whole.RData
+- data/mods_tp0804_surface.RData
+- data/mods_tp0826_epi.RData
+- data/mods_tp0826_hyp.RData
+- data/mods_tp0831_epi.RData
+- data/mods_tp0831_hyp.RData
+- data/mods_tp0852_epi.RData
+- data/mods_tp0852_hyp.RData
+- data/mods_tp0852_whole.RData
+- data/mods_tpA522_hyp.RData
+- data/mods_tpA522_whole.RData
 ---
 
 
@@ -19,6 +193,7 @@ opts_chunk$set(warning = FALSE, message = FALSE, dev.args = list(bg = 'transpare
 library(tidyverse)
 library(lubridate)
 library(shiny)
+if (!require(wqtrends)) install.packages('wqtrends',repos='https://tbep-tech.r-universe.dev')
 library(wqtrends)
 # devtools::load_all('../wqtrends')
 library(ggmap)
@@ -340,7 +515,7 @@ trndseason <- reactive({
 
 ```
 
-This application uses data from long-term water quality monitoring of large lakes of the Seattle metropolitan area (lakes Union, Washington, and Sammamish) ([King County 20202](https://doi.org/10.5066/F7TQ5ZPR){target="_blank"}; [Schraga and Cloern 2017](https://green2.kingcounty.gov/ScienceLibrary/Document.aspx?ArticleID=624){target="_blank"}.  Details on the GAM-mixmeta approach are presented in [Beck et al (2022)](https://doi.org/10.1016/j.scitotenv.2021.149927){target="_blank"}.
+This application uses data from long-term water quality monitoring of large lakes of the Seattle metropolitan area (lakes Union, Washington, and Sammamish) ([King County 2020](https://green2.kingcounty.gov/ScienceLibrary/Document.aspx?ArticleID=624){target="_blank"}.  Details on the GAM-mixmeta approach are presented in [Beck et al (2022)](https://doi.org/10.1016/j.scitotenv.2021.149927){target="_blank"}.
 
 ## Exploratory plots
 
