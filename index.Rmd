@@ -569,7 +569,7 @@ trndseason <- reactive({
 
 ```
 
-This application uses data from long-term water quality monitoring of large lakes of the Seattle metropolitan area (lakes Union, Washington, and Sammamish) ([King County 2020](https://green2.kingcounty.gov/ScienceLibrary/Document.aspx?ArticleID=624){target="_blank"}.  Details on the GAM-mixmeta approach are presented in [Beck et al (2022)](https://doi.org/10.1016/j.scitotenv.2021.149927){target="_blank"}.
+This application uses data from long-term water quality monitoring of large lakes of the Seattle metropolitan area (lakes Union, Washington, and Sammamish) ([King County 2020](https://green2.kingcounty.gov/ScienceLibrary/Document.aspx?ArticleID=624){target="_blank"}) and the [wqtrends](https://tbep-tech.github.io/wqtrends/){target="_blank"} package in R.  Details on the GAM-mixmeta approach are presented in [Beck et al (2022)](https://doi.org/10.1016/j.scitotenv.2021.149927){target="_blank"} and the original San Francisco Bay Trends dashboard from which this application was developed can be found [here](https://nutrient-data.sfei.org/apps/SFbaytrends/){target="_blank"}. The github repository for the San Francisco Bay R source code that provided the basis for this application can be found [here](https://github.com/fawda123/SFBaytrends/){target="_blank"}.
 
 ## Exploratory plots
 
@@ -663,7 +663,7 @@ column(4,
        renderUI({
 
          req(mod())
-         yrs <- mod()$model %>% pull(cont_year) %>% date_decimal(.) %>% year %>% unique
+         yrs <- mod()$model %>% pull(cont_year) %>% date_decimal(.) %>% year %>% unique %>% sort()
          selectInput('yrbs', 'Select base years:', choices = yrs, selected = yrs[1], multiple = T)
          
          })
@@ -672,7 +672,7 @@ column(4,
        renderUI({
          
          req(mod())
-         yrs <- mod()$model %>% pull(cont_year) %>% date_decimal(.) %>% year %>% unique
+         yrs <- mod()$model %>% pull(cont_year) %>% date_decimal(.) %>% year %>% unique %>% sort()
          selectInput('yrts', 'Select test years:', choices = yrs, selected = rev(yrs)[1], multiple = T)
          
          })
