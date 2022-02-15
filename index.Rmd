@@ -243,6 +243,7 @@ library(tidyverse)
 library(lubridate)
 library(shiny)
 # if (!require(wqtrends)) install.packages('wqtrends',repos='https://tbep-tech.r-universe.dev')
+# remotes::install_github('tbep-tech/wqtrends')
 library(wqtrends)
 # devtools::load_all('../wqtrends')
 library(ggmap)
@@ -282,7 +283,8 @@ params <- list(
   'Trophic State Index (Chl a)' = 'TSI_chla',
   'Trophic State Index (Secchi)' = 'TSI_secchi',
   'Trophic State Index (TP)' = 'TSI_TP',
-  'Trophic State Index (TN)' = 'TSI_TN'
+  'Trophic State Index (TN)' = 'TSI_TN',
+  'Schmidt Stability (J/m2)' = 'ss'
   
 )
 
@@ -573,7 +575,7 @@ This application uses data from long-term water quality monitoring of large lake
 
 ## Exploratory plots
 
-The following plots show the raw data for the three central lake monitoring stations and parameters, 1993 - 2021.  Select the station, parameter, and plot type (total time series, by year, or by month).  The year and month plots are aggregated box plots of all observations at a station for each selected time period.
+The following plots show the raw data for long-term lake monitoring stations and parameters, 1993 - 2021.  Select the station, parameter, and plot type (total time series, by year, or by month).  The year and month plots are aggregated box plots of all observations at a station for each selected time period.
 
 ```{r, echo = F}
 # selection widgets
